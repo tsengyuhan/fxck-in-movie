@@ -1,11 +1,9 @@
 # How Many FXCK in a Movie
 
-This website combines the movie information from <a href="https://www.imdb.com/interfaces/" target="_blank">the IMDb database</a> and the Fxck counting data from <a href="https://www.kaggle.com/datasets/devrimtuner/list-of-films-that-most-frequently-use-the-word" target="_blank">List of films that most frequently use the word F*</a>. The purpose is to explore different ways to present data visually and find some interesting facts from the data.
+This website combines the movie information from [the IMDb database](https://www.imdb.com/interfaces/) and the Fxck counting data from [List of films that most frequently use the word F*](https://www.kaggle.com/datasets/devrimtuner/list-of-films-that-most-frequently-use-the-word). The purpose is to explore different ways to present data visually and find some interesting facts from the data.
 
 
-<h3>
-<a href="https://tsengyuhan.github.io/fxck-in-movie/" target="_blank">🎬 Live Demo 🎬 </a>
-</h3>
+### [🎬 Live Demo 🎬](https://tsengyuhan.github.io/fxck-in-movie/)
 
 </br>
 
@@ -36,4 +34,4 @@ know how long the chart is. Dragging the gray handle or scrolling on the chart c
 </br>
 
 
-🐾 This is a course project for learning <a href="https://d3js.org/" target="_blank">d3.js</a> and data visualization. In this [documentation](/documentation.pdf), you can find out how data was processed and the visual design of the project.
+🐾 This is a course project for learning [d3.js](https://d3js.org/) and data visualization. In this [documentation](/documentation.pdf), you can find out how data was processed and the visual design of the project.
