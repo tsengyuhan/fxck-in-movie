@@ -1,0 +1,311 @@
+html {
+	scroll-behavior: smooth;
+}
+
+body{
+  width: 100vw;
+  height: auto;
+  overflow-y: hidden;
+  padding: 0;
+  margin: 0;
+  background-color: antiquewhite;
+  font-family: 'Montserrat Alternates', sans-serif;
+}
+
+
+p{
+  line-height: 1.8;
+}
+
+a{
+  color: white;
+  text-decoration:none;  
+  font-weight: bold;
+}
+
+.intro{
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+section{
+  width: 100%;
+  height: 100vh;
+  background-color: #157089;
+  display: flex;
+  justify-content: center;
+  color: aliceblue;
+}
+
+.textDiv{
+  height: 100%;
+  width: 25%;
+  background-color: #8de7fd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  position: relative;
+  color: #0a3744;
+
+}
+
+
+#nowline{
+  stroke-width: 5px;
+  stroke: #8de7fd;
+}
+
+.question{
+  width: 80%;
+  line-height:1.5;
+  font-size: 20px;
+  text-align: left;
+  line-height: 1.5;
+  font-weight: 500;
+  color: #0a3744;
+}
+
+button{
+  background-color: transparent;
+  color: #0a3744;
+  margin-top: 20px;
+  font-size: 16px;
+  text-align: justify;
+  font-family: 'Montserrat Alternates', sans-serif;
+  border: none;
+  line-height: 1.5;
+  font-weight: 500;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+button:hover{
+  background-color:#fcb7c4 ;
+}
+
+.active{
+  background-color:#fcb7c4 ;
+}
+
+
+
+.sliders{
+  width: 80%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0a3744;
+  font-weight: 500;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+#word_slider_text{
+  margin-top: 50px;
+}
+
+#score_slider_text{
+  margin-top: 50px;
+}
+
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  pointer-events: all;
+  width: 15px;
+  height: 15px;
+  background-color: #0a3744;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px #f1f1f1;
+  cursor: pointer;
+  z-index: 10;
+}
+
+
+input[type=range]::-webkit-slider-thumb:hover {
+  stroke: aliceblue;
+  stroke-width: 5px;
+}
+
+input[type=range]::-webkit-slider-thumb:active {
+  box-shadow: inset 0 0 3px #f1f1f1, 0 0 9px #f1f1f1;
+  -webkit-box-shadow: 0 0 3px #f1f1f1, 0 0 9px #f1f1f1;
+}
+
+input[type="range"] {
+  -webkit-appearance: none; 
+  appearance: none;
+  height: 5px;
+  width: 70%;
+  position: absolute;
+  background-color:#44bbdc;
+  pointer-events: none;
+}
+
+
+
+
+.chart{
+  width: 75%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  background-color: #157089;
+  color:white;
+
+}
+
+#plot{
+  width:100%;
+  height: 100%;
+  position: relative;
+  overflow-x: scroll;  
+}
+
+
+#overview{
+  
+  position: relative;
+}
+
+#x-axis{
+  font-size: 14px;
+}
+
+#for_y{
+  height: 100%;
+  width: 100px;
+  position: sticky;
+  top: 0;
+}
+
+.movie_circle{
+  fill:rgb(180, 156, 121)
+}
+
+
+
+#y-axis{
+  position: sticky;
+  top:0;
+  left: 0;
+}
+
+.label{
+  font-size: 18px;
+  font-weight: 700;
+  fill:aliceblue
+}
+
+.inside-circle{
+  fill: #a4dcea;
+  stroke: #157089;
+  stroke-width: 2px;
+}
+
+.inside-arc{
+  fill: #fcb7c4;
+}
+
+#info{
+  text-anchor:middle;
+  font-size: 20px;
+  font-weight: 600;
+  fill:#0a3744;
+}
+
+#bar_chart{
+  width: 100%;
+  height: 100%;
+  overflow-y: scroll;
+  background-color: #157089;
+}
+
+#bar_texts{
+  background-color: #8de7fd;
+  color: #157089;
+  
+}
+
+#bar_info{
+  pointer-events: none;
+  fill:#10576a;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.switches{
+  width: 80%;
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.switch_group{
+  margin: 5px;
+}
+
+
+.link_to_s_up{
+  width: 50px;
+  margin-bottom:50px ;
+  position: sticky;
+  top: 0
+  
+}
+
+
+.link_to_s_down{
+  width: 50px;
+  margin-top:50px ;
+  position: sticky;
+  bottom: 0
+  
+}
+
+
+#movie_num{
+  font-size: 40px;
+  font-weight: 800;
+  margin-top: 50px;
+}
+
+
+#movie_genre{
+  margin-top: 30px;
+  text-align: center;
+  line-height: 25px;
+  font-weight: 500;
+  
+}
+
+#preview{
+  background-color: #8de7fd;
+  position: fixed;
+  right:40px;
+  bottom: 10px;
+  opacity: 0;
+}
+
+
+
+#bar_preview{
+  background-color: #8de7fd;
+  position: fixed;
+  right:26%;
+  top: 15%;
+  opacity: 0;
+}
+
+.y.mandatory-scroll-snapping {
+  scroll-snap-type: y mandatory;
+}
+
+/* defining scroll-snap stop on children */
+.always-stop > section {
+  scroll-snap-stop: always;
+}

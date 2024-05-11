@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://unpkg.com/d3-simple-slider"></script>
+  <script src="writerBar.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  
+  <title>How many FxCKs in a Movie</title>
+</head>
+<body>
+
+  <section id="s1" class="y mandatory-scroll-snapping always-stop">
+    <div class="intro">
+      <p style="font-size: 40px;font-weight: 800;">How Many FxCKs in a Movie?</p>
+    </br>
+    <p style="font-size: 20px">"The use of profanity in films has often been controversial, but has increased significantly in recent years. The use of the word fuck in film draws particular criticism; in 2005, the documentary Fuck dealt entirely with this phenomenon. The word fuck is thought to be the vulgar term used most in American films." </br>
+    -- <i><a href="https://en.wikipedia.org/wiki/List_of_films_that_most_frequently_use_the_word_fuck" target="_blank">List of films that most frequently use the word fuck</a></i></p></br>
+
+
+    <p style="font-size: 20px">This website combines the movie information from <i><a href="https://www.imdb.com/interfaces/" target="_blank">the IMDb database</a></i> and the Fxck counting data from <i><a href="https://www.kaggle.com/datasets/devrimtuner/list-of-films-that-most-frequently-use-the-word" target="_blank">List of films that most frequently use the word F*</a></i>, visualizing the data and trying to answer some questions.</p></br>
+
+    <a href="#s2" class="link_to_s_down"><img src="down_arrow_2.png" style="width: 100%; height: auto;"></a>
+
+    <h2>or ENTER</h2>
+
+    </div>
+  </section>
+  <section id="s2" class="y mandatory-scroll-snapping always-stop">
+    <div class="textDiv">
+      
+      <a href="#s1" class="link_to_s_up"><img src="up_arrow.png" style="width: 100%; height: auto;"></a>
+
+      <div style="padding: 30px; text-align: justify; line-height: 1.4; ">
+       Each point is a movie, hover on the point to get some detail about the movie! Select different questions to see the different relations of the data.
+      </div>
+      <div class="question">
+      </div>
+      <div id="word_slider_text"></div>
+      <div class="sliders" id="word_slider">
+      </div>
+      <div id="score_slider_text"></div>
+      <div class="sliders" id="score_slider">
+      </div>
+      
+      <a href="#s3" class="link_to_s_down"><img src="down_arrow.png" style="width: 100%; height: auto;"></a>
+    </div>
+
+    <div class="chart">
+      <div id="for_y"></div>
+      <div id="plot">
+    </div>
+    </div>
+  </section>
+
+  <section id="s3" class="y mandatory-scroll-snapping always-stop">
+    <div class="chart" id="writer_bar">
+      <div id="bar_chart"></div>
+    </div>
+
+    <div class="textDiv" id="bar_texts">
+      <a href="#s2" class="link_to_s_up"><img src="up_arrow.png" style="width: 100%; height: auto;"></a>
+      <div style="padding: 30px; text-align: justify; line-height: 1.4; ">
+       Each bar is a movie, hover on the bar to get some detail about the movie! Use the checkboxes below to filter out movies by different genres.
+      </div>
+      <div class="question"> How many FxCKs a writer has written? </div>
+      <div class="switches"></div>
+      <div id="movie_num"></div>
+      <div id="movie_genre"></div>
+
+    </div>
+
+  </section>
+  
+
+  <script>
+
+    //read the dataset
+    d3.csv('./finalData.csv').then(function(d){
+      
+      //convert number data from str -> float
+      var dataset = d.map(function(row){
+        row.Count = parseFloat(row.Count);
+        //if there's no rating data -> 0
+        if(row.Rating == ''){
+          row.Rating = 0
+        }
+        row.Rating = parseFloat(row.Rating);
+        row.Year = parseFloat(row.Year);
+        row.time = parseFloat(row.time);
+        row.rate = parseFloat(row.rate);
+
+        return row
+      })
+
+
+    
+
+      //some value for adjusting space setting
+      var gap_year = 30;
+      var margin_side = 50;
+      var margin_top_bottom = 40;
+
+      //create canvans
+      //for plot chart
+      var canvas = d3.select('#plot')
+                      .append('svg')
+                      .attr('id','overview')
+                      .attr('width',gap_year*dataset.length*0.6+3*margin_side+'px')
+    
+                      
+
+      var canvas_w = document.getElementById('overview').clientWidth-2*margin_side
+      var canvas_h = document.getElementById('plot').clientHeight*0.9
+
+      canvas.attr('height',canvas_h)
+
+      //for y axis
+      var for_y_axis = d3.select('#for_y')
+                    .append('svg')
+                    .attr('width','100%')
+                    .attr('height',canvas_h)
+
+      
+      var preview_h = document.getElementById('overview').clientHeight*0.1
+      var preview_w = document.getElementsByClassName('chart')[0].clientWidth - document.getElementById('for_y').clientWidth - margin_side
+      var preview_margin = 5
+
+
+
+      //-------for scaling and ranging -----------
+
+      //the rate (words/min) -> inside arc
+      var rate_max = d3.max(dataset,function(d){return d.rate})
+      var rate_range = d3.extent(dataset,function(d){return d.rate})
+      var rate_scale = d3.scaleLinear()
+                          .domain([0,rate_max])
+                          .range([0,2*Math.PI])
+      
+      
+
+      //the rating score -> outside arc (360 degrees)
+      //score range: 0-10
+      var score_max = d3.max(dataset,function(d){return d.Rating})
+      var score_range = d3.extent(dataset,function(d){return d.Rating})
+      var score_scale = d3.scaleLinear()
+                          .domain([0,10])
+                          .range([0,2*Math.PI])
+      
+      var canvas_w2 = document.getElementsByClassName('chart')[0].clientWidth - 2*margin_side
+      //score scale2 -> x-axis
+      var score_scale2 = d3.scaleLinear()
+                          .domain([0,10])
+                          .range([margin_side,canvas_w2-margin_side])
+      
+      //the word counts -> the y-axis
+      var count_max = d3.max(dataset,function(d){return d.Count})
+      var count_range = d3.extent(dataset, function(d){return d.Count})
+      var count_scale = d3.scaleLinear()
+                          .domain([120,count_max])
+                          .range([canvas_h-margin_top_bottom, margin_top_bottom])
+
+      
+      //the Year -> the x-axis
+      //from latest to oldest
+      var year_range = d3.extent(dataset, function(d){return d.Year})
+      var year_scale = d3.scaleLinear()
+                          .domain([year_range[0],year_range[1]+1])
+                          .range([canvas_w-margin_side, 0])
+
+
+
+      //for preview scalling
+      var count_scale_preview = d3.scaleLinear()
+                                  .domain([120,count_max])
+                                  .range([preview_h-preview_margin, preview_margin])
+      var year_scale_preview = d3.scaleLinear()
+                                  .domain([year_range[0],year_range[1]+1])
+                                  .range([preview_w-preview_margin*2, preview_margin])
+     
+            
+     
+      
+      
+
+      //draw x & y axis
+      canvas.append('g')
+            .attr('id','x-axis')
+            .attr("transform", "translate(0," + (canvas_h-margin_top_bottom) + ")")
+    
+      for_y_axis.append('g')
+            .attr('id','y-axis')
+            .attr("transform", "translate(" + margin_side + ",0)")
+            .call(d3.axisRight().scale(count_scale))
+            .attr("font-size","14px");
+      //x & y axis label
+      for_y_axis.append("text")
+            .attr('class','label')
+            .attr('id','x-label')
+            .attr("x", 30)
+            .attr("y", canvas_h-margin_top_bottom/2)
+      for_y_axis.append("text")
+            .attr('class','label')
+            .attr('id','y-label')
+            .attr('transform-origin','50 50')
+            .attr('transform','rotate(-90)')
+            .attr("x", -(canvas_h-margin_top_bottom)/2)
+            .attr("y", margin_side/2)
+            .text('Word Count')
+      
+       d3.select('#overview')
+          .append('line')
+          .attr('id','nowline')
+          .attr('x1',2)
+          .attr('y1',canvas_h-margin_top_bottom)
+          .attr('x2',2)
+          .attr('y2',canvas_h-margin_top_bottom+20)
+        
+      
+        d3.select('#overview')
+          .append('text')
+          .attr('id','nowText')
+          .text('NOW')
+          .attr('dominant-baseline','hanging')
+          .attr('x',0)
+          .attr('y',canvas_h-margin_top_bottom+25)
+          .attr('font-size','14px')
+          .attr('fill','#8de7fd')
+          .attr('font-weight',500)
+
+          
+
+        
+
+
+      //------------ slider part ---------------------
+
+      //create sliders group (word count & audiance's score)
+      var filter_name = ['Word Count','Score']
+
+      var word_start = count_range[0]
+      var word_end = count_range[1]
+      var score_start = 0
+      var score_end = 10
+
+      //create slider for filtering by word count
+      d3.select('#word_slider')
+        .append('input')
+        .attr('type','range')
+        .classed('fromSlider',true)
+        .attr('id','fromSlider1')
+        .attr('min',count_range[0])
+        .attr('max',count_range[1])
+        .attr('value',count_range[0])
+      d3.select('#word_slider')
+        .append('input')
+        .attr('type','range')
+        .classed('toSlider',true)
+        .attr('id','toSlider1')
+        .attr('min',count_range[0])
+        .attr('max',count_range[1])
+        .attr('value',count_range[1])
+
+      //create slider for filtering by audience's score
+      d3.select('#score_slider')
+        .append('input')
+        .attr('type','range')
+        .classed('fromSlider',true)
+        .attr('id','fromSlider2')
+        .attr('min',0)
+        .attr('max',10)
+        .attr('value',0)
+      d3.select('#score_slider')
+        .append('input')
+        .attr('type','range')
+        .classed('toSlider',true)
+        .attr('id','toSlider2')
+        .attr('min',0)
+        .attr('max',10)
+        .attr('value',10)
+    
+      d3.select('#word_slider_text')
+        .html('Word Count : '+ word_start + '~' + word_end)
+      
+      d3.select('#score_slider_text')
+        .html('Rating : '+ score_start + '~' + score_end)
+
+      function controlFromSlider(fromSlider, toSlider) {
+        const [from, to] = getParsed(fromSlider, toSlider);
+        fillSlider(fromSlider, toSlider, '#44bbdc', '#0a3744', toSlider);
+        if (from > to) {
+          fromSlider.value = to;
+        } 
+        //console.log(typeof from)
+        return [from, to]
+      }
+
+      function controlToSlider(fromSlider, toSlider) {
+        const [from, to] = getParsed(fromSlider, toSlider);
+        fillSlider(fromSlider, toSlider, '#44bbdc', '#0a3744', toSlider);
+        if (from <= to) {
+          toSlider.value = to;
+        } else {
+          toSlider.value = from;
+        }
+        return [from, to]
+      }
+      
+      function getParsed(currentFrom, currentTo) {
+        const from = parseInt(currentFrom.value, 10);
+        const to = parseInt(currentTo.value, 10);
+        return [from, to];
+      }
+
+      function fillSlider(from, to, sliderColor, rangeColor, controlSlider) {
+          const rangeDistance = to.max-to.min;
+          const fromPosition = from.value - to.min;
+          const toPosition = to.value - to.min;
+          controlSlider.style.background = `linear-gradient(
+            to right,
+            ${sliderColor} 0%,
+            ${sliderColor} ${(fromPosition)/(rangeDistance)*100}%,
+            ${rangeColor} ${((fromPosition)/(rangeDistance))*100}%,
+            ${rangeColor} ${(toPosition)/(rangeDistance)*100}%, 
+            ${sliderColor} ${(toPosition)/(rangeDistance)*100}%, 
+            ${sliderColor} 100%)`;
+      }
+      
+      const fromSlider1 = document.querySelector('#fromSlider1');
+      const toSlider1 = document.querySelector('#toSlider1');
+      const fromSlider2 = document.querySelector('#fromSlider2');
+      const toSlider2 = document.querySelector('#toSlider2');
+      fillSlider(fromSlider1, toSlider1, '#44bbdc', '#0a3744', toSlider1);
+      fillSlider(fromSlider2, toSlider2, '#44bbdc', '#0a3744', toSlider2);
+
+      
+      var filterData = []
+
+
+      //filter all data by the slider setting
+
+      fromSlider1.oninput = function(){ 
+        word_start = controlFromSlider(fromSlider1, toSlider1)[0]
+        updatData()
+      }
+  
+      toSlider1.oninput = function(){
+        word_end = controlToSlider(fromSlider1, toSlider1)[1]
+        updatData()
+      }
+      
+      fromSlider2.oninput = function(){
+        score_start = controlFromSlider(fromSlider2, toSlider2)[0]
+        updatData()
+      }
+      
+      toSlider2.oninput = function(){
+        score_end = controlToSlider(fromSlider2, toSlider2)[1]
+        updatData()
+      }
+
+
+      function updatData(){
+        filterData = dataset.filter(function(d){
+          return d.Count <= word_end
+              && d.Count >= word_start
+              && d.Rating <= score_end
+              && d.Rating >= score_start
+        })
+        d3.select('#word_slider_text')
+          .html('Word Count : '+ word_start + '~' + word_end)
+      
+        d3.select('#score_slider_text')
+          .html('Rating : '+ score_start + '~' + score_end)
+
+        DrawMovieGroup(filterData)
+        previwUpdate(filterData)
+        //console.log(filterData)
+      }
+
+ 
+      
+      //current x-axis
+      var x_item = 0
+     
+
+      //create buttons on question div
+      d3.select('.question')
+        .append('button')
+        .classed('active',true)
+        .attr('id','button1')
+        .html('Q1: How is the usage of FxCK in the movies from up to now?')
+        .on('click',function(e){
+          console.log('q1')
+          //pre_x = x
+          x_item = 0
+          document.getElementById('nowline').style.opacity = 1
+          document.getElementById('nowText').style.opacity = 1
+          updatData()
+          DrawMovieGroup(filterData)
+          previwUpdate(filterData)
+          drawAxis('Year')
+          document.getElementById('preview').style.opacity = 1
+          d3.select('#button1').classed('active',true)
+          d3.select('#button2').classed('active',false)
+        })
+        
+      d3.select('.question')
+        .append('button')
+        .attr('id','button2')
+        .classed('active',false)
+        .html('Q2: What is the correlation between the number of FxCK and the movie rating?')
+        .on('click',function(){
+          console.log('q2')
+          //pre_x = x
+          x_item = 1
+          updatData()
+          document.getElementById('nowline').style.opacity = 0
+          document.getElementById('nowText').style.opacity = 0
+          DrawMovieGroup(filterData)
+          previwUpdate(filterData)
+          drawAxis('Rating')
+
+          //remoeve preview
+          document.getElementById('preview').style.opacity = 0
+
+          d3.select('#button2').classed('active',true)
+          d3.select('#button1').classed('active',false)
+        })
+
+    
+
+
+
+      // for different x-axis
+      function drawAxis(choose){
+        let scale_type
+        let tick_num
+        if(choose == 'Year'){
+          scale_type = year_scale
+          tick_num = year_range[1]-year_range[0]
+          d3.select('#overview')
+            .attr('width', canvas_w)
+        }
+        else if(choose == 'Rating'){
+          scale_type = score_scale2
+          tick_num = 11
+          d3.select('#overview')
+            .attr('width', canvas_w2)
+        }
+
+        d3.select('#x-axis')
+          .call(d3.axisBottom(scale_type)
+                  .ticks(tick_num)
+                  .tickFormat(d3.format("d"))
+                  )
+        document.querySelectorAll('g.tick')[document.querySelectorAll('g.tick').length-1].style.opacity = 0
+
+        for_y_axis.select('#x-label')
+            .text(choose);
+      }
+
+      drawAxis('Year')
+
+
+
+
+
+
+
+
+      //dot size
+      var dot_r = 8
+
+      
+      //function to draw Movie circles
+      //use data as parameter, so it's easier to update
+      function DrawMovieGroup(data){
+        canvas.selectAll('.groups')
+              .data(data, function(d){
+                return d.originalTitle
+              })
+              .join(
+                function(enter){
+                  return enter.append('g')
+                              .classed('groups',true)
+                              .append('circle')
+                              .classed('dot',true)
+                              .attr('cx',function(d){
+                                if(x_item == 0){
+                                  return year_scale(d.Year)
+                                }
+                                else{
+                                  return score_scale2(d.Rating)
+                                }
+                              })  
+                              .attr('cy',function(d){
+                                return count_scale(d.Count)
+                              })
+                              .attr('r',dot_r)
+                              .attr('fill','#157089')
+                              .attr('stroke','white')
+                            
+                },
+                function(update){
+                  return update.select('.dot')
+                                .attr('cx',function(d){
+                                  if(x_item == 0){
+                                    return year_scale(d.Year)
+                                  }
+                                  else{
+                                    return score_scale2(d.Rating)
+                                  }
+                                })  
+                                .attr('cy',function(d){
+                                  return count_scale(d.Count)
+                                })
+                                .attr('r',dot_r)
+                                .attr('fill','#157089')
+                                .attr('stroke','white')
+                                
+                },
+                function(exit){
+                  return exit.remove()
+                }
+              )
+              .on('mouseover',function(e,d){
+            
+                  //inner pie -> rate
+                  let arcGen = d3.arc()
+                                  .innerRadius(0)
+                                  .outerRadius(80)
+                                  .startAngle(0)
+                  //outer pie -> score
+                  let arcGen2 = d3.arc()
+                                  .innerRadius(80)
+                                  .outerRadius(100)
+                                  .startAngle(0)
+                
+      
+                  //console.log(e.target.parentElement)
+
+                  //make the chosen dot pink
+                  d3.select(e.target)
+                    .attr('opacity',1)
+                    .attr('fill','#f08ca0')
+
+                  //detail info group (id=info)
+                  d3.select(e.target.parentElement)
+                    .append('g')
+                    .attr('id','info')
+                    .style('transform', function(d,i){
+                      let x = 0
+                      let y = 0
+                        if(x_item==0){ x = year_scale(d.Year)}
+                        else{x = score_scale2(d.Rating)}
+                        if(count_scale(d.Count)<canvas_h/3){y = count_scale(d.Count)+180}
+                        else{y = count_scale(d.Count)-200}
+                      return 'translate('+x+'px,'+y+'px)'
+                    })
+
+                    d3.select('#info')
+                      .transition()
+                      .ease(d3.easeLinear)
+                      .duration(1000)
+
+                    //line
+                    d3.select('#info')
+                      .append('line')
+                      .attr('x1',0)
+                      .attr('y1',0)
+                      .attr('x2',0)
+                      .attr('y2',function(d){
+                        if(count_scale(d.Count)<canvas_h/3){return -180+dot_r}
+                        else{ return 200-dot_r}
+                      })
+                      .attr('stroke','aliceblue')
+                      
+                    
+                    //outside arc => Rating
+                    d3.select('#info')
+                      .append('path')
+                      .attr('d',arcGen2.endAngle(function(d){
+                        //console.log(d.Rating)
+                        return score_scale(d.Rating)
+                      }))
+                      .attr('fill','#ffe06e')
+                      .attr('stroke','#157089')
+                      .attr('stroke-width','2px')
+
+                    //inside circle
+                    d3.select('#info')
+                      .append('circle')
+                      .classed('inside-circle',true)
+                      .attr('r',81)
+                      .attr('cx',0)
+                      .attr('cy',0)
+                      
+                    
+                    //inside arc => rate
+                    d3.select('#info')
+                      .append('path')
+                      .classed('inside-arc',true)
+                      .attr('d',arcGen.endAngle(function(d){
+                        return rate_scale(d.rate)
+                      }))
+                      .attr('fill','#fbdce2')
+                    
+                    //text: movie name + Rating
+                    d3.select('#info')
+                      .append('text')
+                      .text(function(d){
+                        let score = d.Rating
+                        if(score == 0){
+                          score = 'X'
+                        }
+                        return d.originalTitle + ' ( '+score+' )'
+                      })
+                      .attr('y',function(d){
+                        if(count_scale(d.Count)<canvas_h/3){return 130}
+                        else{ return -120}
+                      })
+                      .attr('fill','aliceblue')
+                    
+                    //text: Rate
+                    d3.select('#info')
+                      .append('text')
+                      .attr('dominant-baseline','middle')
+                      .text(function(d){return d.rate+ ' FxCKs / min '})
+                      .attr('font-size','14px')
+                    //text: word count
+                    d3.select('#info')
+                      .append('text')
+                      .attr('dominant-baseline','middle')
+                      .attr('y', 30)
+                      .text(function(d){return 'Total: '+ d.Count})
+                      .attr('font-size','16px')
+                        
+                      
+                })
+              .on('mouseout',function(e,d){
+
+                  d3.select(e.target)
+                    .attr('opacity',1)
+                    .attr('fill','#157089')
+
+                  d3.select(e.target.parentElement)
+                    .select('#info')
+                    .remove()
+                })
+              
+       
+      }
+
+      // ----- create preview chart------------
+      var preview = d3.select('#plot')
+                    .append('svg')
+                    .attr('id','preview')
+                    .attr('width', preview_w)
+                    .attr('height',preview_h)
+                    
+                   
+
+
+      var brush = d3.brushX()
+	                  //.on('start brush', handleBrush);
+                    .on('start brush end', handleBrush);
+     
+      var handle_width = preview_w*(preview_w + margin_side)/canvas_w
+      //console.log(handle_width)
+
+      
+    
+      var brushExtent = [0,handle_width]
+
+      function initBrush() {
+        d3.select('#preview')
+          .call(brush)
+          .call(brush.move, brushExtent)
+          .selectAll('.handle').remove();
+      }
+
+      // ---- scroll position ---------------
+      var scrollBar = document.getElementById('plot')
+
+      var scroll_scale = d3.scaleLinear()
+                            .domain([0, document.getElementById('preview').clientWidth])
+                            .range([0, document.getElementById('overview').clientWidth])
+        
+      var scroll_scale2 = d3.scaleLinear()
+                            .domain([0, document.getElementById('overview').clientWidth])
+                            .range([0, document.getElementById('preview').clientWidth])
+
+      
+
+      function handleBrush(e) {
+        scrollBar.scrollLeft = scroll_scale(e.selection[0])
+        
+      }
+
+      scrollBar.addEventListener('scroll',function(e){
+        //console.log(e.target.scrollLeft)
+        let new_pos = scroll_scale2(e.target.scrollLeft)
+        d3.select('#preview')
+          .call(brush.move, [new_pos, new_pos+handle_width])
+      })
+
+    
+      // --- preview update ------
+      function previwUpdate(data) {
+          //console.log(d)
+          preview.selectAll('.preview_dot')
+                  .data(data, function(d){
+                    return d.originalTitle
+                  })
+                  .join(
+                    function(enter){
+                      return enter.append('circle')
+                                  .classed('preview_dot',true)
+                                  .attr('cx',function(d){ return year_scale_preview(d.Year)})  
+                                  .attr('cy',function(d){ return count_scale_preview(d.Count)})
+                                  .attr('r',3)
+                                  .attr('stroke','#0a3744')
+                                  .attr('fill','#fbdce2')
+                                
+                    },
+                    function(update){
+                      return update.select('.preview_dot')
+                                    .attr('cx',function(d){ return year_scale_preview(d.Year)})
+                                    .attr('cy',function(d){ return count_scale_preview(d.Count)})
+                                    .attr('r',3)
+                                    .attr('stroke','#0a3744')
+                                    .attr('fill','#fbdce2')
+                                    
+                    },
+                    function(exit){
+                      return exit.remove()
+                    }
+                  )
+                  .style('fill', function(d) {
+                    let pos_x = year_scale_preview(d.Year)
+                    let pos_y = count_scale_preview(d.Count)
+                    let inBrushExtent = brushExtent &&
+                      pos_x >= brushExtent[0] &&
+                      pos_y <= brushExtent[1];
+
+                    return inBrushExtent ? 'white' : '#8de7fd';
+                  });
+      }
+
+
+      //hide the preview part when scroll to other section
+      document.addEventListener('scroll', function(e){
+        if(location.hash == '#s2'){
+          document.getElementById('preview').style.opacity = 0.8
+          document.getElementById('preview').style.display = 'initial'
+          document.getElementById('bar_preview').style.display = 'none'
+        }
+        else if(location.hash == '#s3'){
+          document.getElementById('bar_preview').style.opacity = 0.8
+          document.getElementById('bar_preview').style.display = 'initial'
+          document.getElementById('preview').style.display = 'none'
+        }
+        else if(location.hash == '#s1'){
+          document.getElementById('preview').style.display = 'none'
+          document.getElementById('bar_preview').style.display = 'none'
+        }
+      })
+
+      var current_page = 0
+
+      document.addEventListener("keyup", function(event) {
+          let element
+          if (event.keyCode === 13) {
+              current_page ++
+              if(current_page > 2){current_page=0}
+          }
+          if(current_page == 0){
+            element = document.getElementById("s1");
+            location.hash = '#s1'
+          }
+          else if(current_page == 1){
+            element = document.getElementById("s2");
+            location.hash = '#s2'
+          }
+          else if(current_page == 2){
+            element = document.getElementById("s3");
+            location.hash = '#s3'
+          }
+           
+          element.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+      });
+      
+
+
+      initBrush();
+      DrawMovieGroup(dataset)
+      previwUpdate(dataset)
+      writerBar(dataset)
+
+
+
+
+
+
+      
+
+    })
+
+
+
+
+  </script>
+  
+</body>
+</html>
