@@ -36,4 +36,4 @@ know how long the chart is. Dragging the gray handle or scrolling on the chart c
 </br>
 
 
-🐾 This is a course project for learning <a href="https://d3js.org/" target="_blank">d3.js</a> and data visualization.
+🐾 This is a course project for learning <a href="https://d3js.org/" target="_blank">d3.js</a> and data visualization. In this [documentation](/documentation.pdf), you can find out how data was processed and the visual design of the project.
